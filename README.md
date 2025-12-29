@@ -1,17 +1,9 @@
 # task_manager
 
-A new Flutter project.
-
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
-# task_manager
+This app is a simple example of module that is sed in Hospital Managenment System. This modle is prepared for my intern purpose (BCA 7th semester) in Sipalaya Info Tech Pvt. Ltd. in kathmandu. This module is completely developed using flutter. 
+It contains features as follow:
+- Add task for present and upcoming days
+- Complete CRUD operation
+- User friendly UI
+- Chnage app theme mode
+  
