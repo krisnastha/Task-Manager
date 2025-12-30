@@ -1,22 +1,66 @@
 import 'package:flutter/material.dart';
 import 'package:task_manager/models/task.dart';
+import 'package:task_manager/services/db_service.dart';
 
 class TaskProvider extends ChangeNotifier {
+  final dbService = DbService();
   // to store list of task in a variable
-  final List<Task> _allTasks = [];
+  List<Task> _allTasks = [];
+
+  bool _isLoading = false;
 
   // getter functions
   List<Task> get allTask => _allTasks;
+  bool get isLoading => _isLoading;
+
+  // load all todos from database
+  Future<void> loadTodos() async {
+    _isLoading = true;
+    notifyListeners();
+    _allTasks = await dbService.readAllTasks();
+    _isLoading = false;
+    notifyListeners();
+  }
 
   /// Add new task
-  void addNewTask({required Task newtask}) {
-    final index = _allTasks.indexWhere((task) => task.id == newtask.id);
-    if (index != -1) {
-      _allTasks[index] = newtask;
-    } else {
-      _allTasks.add(newtask);
-    }
+  Future<bool> addNewTask({required Task newtask}) async {
+    _isLoading = true;
     notifyListeners();
+    try {
+      final task = await dbService.create(todo: newtask);
+      _allTasks.insert(0, task);
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print("failed to add new task : $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // update task
+  Future<bool> updateTask({required Task todo}) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      await dbService.update(todo: todo);
+      final index = _allTasks.indexWhere((task) => task.id == todo.id);
+      print('index value : $index');
+      if (index != -1) {
+        _allTasks[index] = todo;
+      }
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      print("failed to update existed task : $e");
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
   }
 
   List<Task> get getTodayTasks {
@@ -41,8 +85,19 @@ class TaskProvider extends ChangeNotifier {
   }
 
   /// Remove existing task
-  void removeTask({required Task existedTask}) {
-    _allTasks.remove(existedTask);
-    notifyListeners();
+  Future<void> removeTask({required int id}) async {
+    try {
+      _isLoading = true;
+      notifyListeners();
+      await dbService.delete(id);
+      _allTasks.removeWhere((task) => task.id == id);
+
+      notifyListeners();
+    } catch (e) {
+      throw Exception(e);
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

@@ -54,10 +54,73 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
     return;
   }
 
-  void saveTask(Task task) {
-    if (_formKey.currentState!.validate()) {
-      context.read<TaskProvider>().addNewTask(newtask: task);
-      Navigator.pop(context);
+  void saveTask() async {
+    final formProvider = context.read<TaskFormProvider>();
+
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // shows error message if date is not selected
+    if (formProvider.validateDate() != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          duration: Duration(seconds: 3),
+          backgroundColor: Colors.red,
+          content: Text("Please select a date"),
+        ),
+      );
+      return;
+    }
+
+    final taskProvider = context.read<TaskProvider>();
+    bool success = false;
+    if (widget.task != null) {
+      // update existing task
+      final updatedTask = widget.task!.copyWith(
+        id: widget.task!.id,
+        title: _titleController.text.trim(),
+        description: _descController.text.trim(),
+        createdDateTime: formProvider.selectedDate,
+        category: formProvider.selectedCategory,
+      );
+
+      success = await taskProvider.updateTask(todo: updatedTask);
+    } else {
+      // create new task
+      final newTask = Task(
+        title: _titleController.text.trim(),
+        description: _descController.text.trim(),
+        createdDateTime: formProvider.selectedDate!,
+        category: formProvider.selectedCategory,
+      );
+
+      success = await taskProvider.addNewTask(newtask: newTask);
+    }
+
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.green,
+            content: Text(
+              widget.task != null
+                  ? "Task updated successfully"
+                  : "Task added successfuly",
+            ),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.red,
+            content: Text("Failed to add task"),
+          ),
+        );
+      }
     }
   }
 
@@ -175,23 +238,15 @@ class _AddNewTaskScreenState extends State<AddNewTaskScreen> {
                     child: Text('Cancel'),
                   ),
 
-                  Consumer<TaskFormProvider>(
+                  Consumer<TaskProvider>(
                     builder: (context, provider, child) {
-                      return ElevatedButton(
-                        onPressed: () {
-                          final task = Task(
-                            id: isExisted
-                                ? widget.task!.id
-                                : UniqueKey().toString(),
-                            title: _titleController.text.trim(),
-                            description: _descController.text.trim(),
-                            createdDateTime: provider.selectedDate!,
-                            category: provider.selectedCategory,
-                          );
-
-                          saveTask(task);
-                        },
-                        child: Text(isExisted ? 'Update' : 'Add'),
+                      return Expanded(
+                        child: ElevatedButton(
+                          onPressed: saveTask,
+                          child: provider.isLoading
+                              ? CircularProgressIndicator(color: Colors.white)
+                              : Text(isExisted ? 'Update' : 'Add'),
+                        ),
                       );
                     },
                   ),

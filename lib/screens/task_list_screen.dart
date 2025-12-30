@@ -15,11 +15,32 @@ class TaskListScreen extends StatefulWidget {
 
 class _TaskListScreenState extends State<TaskListScreen> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      context.read<TaskProvider>().loadTodos();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Task')),
       body: Consumer<TaskProvider>(
         builder: (context, taskProvider, child) {
+          // when data is loading
+          if (taskProvider.isLoading) {
+            return Center(
+              child: Column(
+                spacing: 12,
+                children: [
+                  CircularProgressIndicator(),
+                  Text("Loading tasks..."),
+                ],
+              ),
+            );
+          }
+
           final todayTasks = taskProvider.getTodayTasks;
           final upComingTasks = taskProvider.upComingTask;
           if (todayTasks.isEmpty && upComingTasks.isEmpty) {

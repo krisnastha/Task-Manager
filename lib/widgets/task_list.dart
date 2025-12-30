@@ -29,7 +29,7 @@ class TaskList extends StatelessWidget {
             );
           },
           child: Dismissible(
-            key: ValueKey(task),
+            key: ValueKey(task.id),
             background: Container(
               padding: EdgeInsets.only(right: 10),
               alignment: Alignment.centerRight,
@@ -43,8 +43,8 @@ class TaskList extends StatelessWidget {
             confirmDismiss: (direction) {
               return getConfirmation(context: context);
             },
-            onDismissed: (direction) {
-              context.read<TaskProvider>().removeTask(existedTask: task);
+            onDismissed: (direction) async {
+              await context.read<TaskProvider>().removeTask(id: task.id!);
             },
             child: Card(
               child: Padding(
